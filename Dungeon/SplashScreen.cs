@@ -1,4 +1,5 @@
 using Utils;
+using System.Collections;
 using static Utils.HelperFunctions;
 
 namespace Dungeon
@@ -7,7 +8,7 @@ namespace Dungeon
     public class SplashScreen : GameEngine.IScene
     {
         const int MAX_RUNTIME = 100;
-        const int TICKS_PER_FRAME = 4;
+        const int TICKS_PER_FRAME = 3;
         const string art = """
 ▓█████▄  █    ██  ███▄    █   ▄████ ▓█████  ▒█████   ███▄    █ 
 ▒██▀ ██▌ ██  ▓██▒ ██ ▀█   █  ██▒ ▀█▒▓█   ▀ ▒██▒  ██▒ ██ ▀█   █ 
@@ -20,7 +21,7 @@ namespace Dungeon
    ░       ░              ░       ░    ░  ░    ░ ░           ░ 
  ░                                                             
 """;
-        System.Collections.Hashtable colorPalet = new() {
+        Hashtable colorPalet = new() {
             {9608 , "\u001b[38;5;232m" },
             {9619,  "\u001b[38;5;88m" },
             {9618,  "\u001b[38;5;52m" },
@@ -32,87 +33,72 @@ namespace Dungeon
             {32, ANSICodes.Colors.Black},
 
         };
+
         int tickCount = 0;
-        int totalTuntime = 0;
+        int totalTickCount = 0;
         bool dirty = true;
+        bool exit = false;
         char[][] artArray;
         int startY = 0;
         int startX = 0;
+        int padding = 3;
         string outputGraphics = "";
+        Func<int> mainColorOcilator = Oscillate(232, 255);
+
         public Action<Type, object[]> OnExitScreen { get; set; }
 
-        int mainColor = 232;
-
-
-        int[][] values;
         public void init()
         {
             Console.Clear();
             artArray = Create2DArrayFromMultiLineString(art);
-            values = new int[artArray.Length][];
-
-            for (int row = 0; row < artArray.Length; row++)
-            {
-                values[row] = new int[artArray[row].Length];
-                for (int col = 0; col < artArray[row].Length; col++)
-                {
-                    values[row][col] = (int)artArray[row][col];
-                }
-            }
-
-
-
-            //colorMatrix = CreateColorMapFrom(artArray, COLOR_DELTA, MIN_COLOR, MAX_COLOR);
-
-            /*startY = (int)((Console.WindowHeight - colorMatrix.Length) * 0.25);
-            startX = (int)((Console.WindowWidth - colorMatrix[0].Length) * 0.5);
-*/
+            startY = (int)((Console.WindowHeight - artArray.Length) * 0.25);
+            startX = (int)((Console.WindowWidth - artArray[0].Length) * 0.5);
             tickCount = TICKS_PER_FRAME;
         }
+
         public void input()
         {
+            if (Console.KeyAvailable)
+            {
+                Console.ReadKey();
+                exit = true;
+            }
         }
-
-        int colorDelta = 1;
 
         public void update()
         {
             tickCount++;
+            totalTickCount++;
+
             if (tickCount >= TICKS_PER_FRAME)
             {
                 dirty = true;
                 outputGraphics = "";
-                colorPalet[9608] = $"\u001b[38;5;{mainColor}m";
-                mainColor += colorDelta;
-                if (mainColor > 255)
-                {
-                    mainColor = 255;
-                    colorDelta = -1;
-                }
-                else if (mainColor < 232)
-                {
-                    mainColor = 232;
-                    colorDelta = 1;
-                }
+                colorPalet[9608] = $"\u001b[38;5;{mainColorOcilator()}m";
 
-                for (int row = 0; row < values.Length; row++)
+                for (int row = 0; row < artArray.Length; row++)
                 {
+                    outputGraphics += $"{ANSICodes.Positioning.SetCursorPos(startY + row, startX)}";
                     for (int col = 0; col < artArray[row].Length; col++)
                     {
-
                         if (colorPalet.ContainsKey((int)artArray[row][col]))
                         {
                             outputGraphics += $"{colorPalet[(int)artArray[row][col]]}{artArray[row][col]}{ANSICodes.Reset}";
                         }
-
                     }
-                    outputGraphics += "\n";
+                }
+
+                if (totalTickCount > MAX_RUNTIME)
+                {
+                    outputGraphics += $"{ANSICodes.Positioning.SetCursorPos(startY + artArray.Length + padding, startX)}";
                 }
             }
 
+            if (exit)
+            {
+                OnExitScreen(typeof(CharacterCreationScreen), null);
+            }
         }
-
-
 
         public void draw()
         {
@@ -120,14 +106,11 @@ namespace Dungeon
             {
                 dirty = false;
                 Console.Clear();
-                Console.Write(outputGraphics);
-
-
+                Console.WriteLine(outputGraphics);
+                Console.WriteLine(Output.Align("Press Any Key To Start", Alignment.CENTER));
 
             }
         }
-
-
 
     }
 
