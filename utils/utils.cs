@@ -2,6 +2,7 @@ namespace Utils
 {
     public static class HelperFunctions
     {
+
         public static char[][] Create2DArrayFromMultiLineString(string input)
         {
             string[] lines = input.Split('\n');
@@ -29,7 +30,47 @@ namespace Utils
             }
             return output;
         }
+
+        public static Func<int> Oscillate(int min, int max, int delta = 1)
+        {
+            int current = min;
+            int direction = 1;
+
+            return () =>
+            {
+                current += direction * delta;
+                if (current >= max)
+                {
+                    current = max;
+                    direction = -1;
+                }
+                else if (current <= min)
+                {
+                    current = min;
+                    direction = 1;
+                }
+
+                return current;
+            };
+        }
+
+        public static string ReadFile(string filePath)
+        {
+            string content = "";
+            try
+            {
+                content = File.ReadAllText(filePath);
+            }
+            catch (System.Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                // Deal with the problem upstream?
+            }
+            return content;
+        }
     }
+
+
     public static class ANSICodes
     {
         public const string Reset = "\u001b[0m";
