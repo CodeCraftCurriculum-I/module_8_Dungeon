@@ -30,7 +30,7 @@ All your code and related files should be neatly organized in a Zip file, with t
 module_8_Dungon  
 ├── .vscode  
 ├── module_8_dungon.csproj  
-├── module_7_dungon.sln  
+├── module_8_dungon.sln  
 ├── \*.\*  
 └── README.md  
 
